@@ -263,9 +263,25 @@ def setup_output(live_mode):
 
 
 def send_initial_position(output, x, y, z, live_mode):
-    """Send the initial position command to the printer or G-code file."""
+    """Send initialization and the initial position command to the printer or G-code file."""
+    # Initialization commands
+    init_commands = [
+        "G21",  # Set units to millimeters
+        "G90",  # Set to absolute positioning
+        "G28",  # Home all axes
+    ]
+
+    for cmd in init_commands:
+        if live_mode:
+            output.write(f"{cmd}\n".encode())
+            wait_for_printer_ready(output)
+        else:
+            output.write(f"{cmd}\n")
+        logging.debug(f"{'Sending' if live_mode else 'Writing'}: {cmd}")
+
+    # Send initial position
     logging.info(f"Initial position set to: X={x:.2f}, Y={y:.2f}, Z={z:.2f}")
-    command = f"G1 X{x * 10:.2f} Y{y * 10:.2f} Z{z:.2f} F500"
+    command = f"G1 X{x * 10:.2f} Y{y * 10:.2f} Z{z * 10:.2f} F500"
     if live_mode:
         output.write(f"{command}\n".encode())
         wait_for_printer_ready(output)
@@ -277,7 +293,7 @@ def send_initial_position(output, x, y, z, live_mode):
 def process_movement(output, x, y, z, note, rms, freq, live_mode):
     """Process the movement based on the detected note and RMS."""
     if note:
-        logging.debug(f"Detected note: {note}, Frequency={freq:.2f} Hz, RMS={rms:.2f}")
+        logging.info(f"Detected note: {note}, Frequency={freq:.2f} Hz, RMS={rms:.2f}")
         x, y, z = move_printer(output, x, y, z, note, rms, live_mode)
         if live_mode:
             time.sleep(PRINTER_POLL_FREQ)
@@ -309,74 +325,66 @@ def normalize_note(note):
 
 
 # Add Z-axis boundaries
-MIN_Z = -10  # Minimum Z height (e.g., at the plate level)
-MAX_Z = 120  # Maximum Z height (adjust based on your setup)
+MIN_Z = 10  # Minimum Z height (e.g., at the plate level)
+MAX_Z = 220  # Maximum Z height (adjust based on your setup)
 
 
 def move_printer(output, x, y, z, note, rms, live_mode):
     """Processes movements based on note and RMS and sends them to the printer."""
-    # Normalize the note to extract the base note and accidental
-    base_note, accidental = normalize_note_with_accidental(
-        note
-    )  # Updated function to include accidentals
+    base_note, accidental = normalize_note_with_accidental(note)
 
-    # Initialize movement variables
     dx, dy, dz = 0, 0, 0
 
-    # Base note movements
     if base_note in MOVEMENTS:
         commands = MOVEMENTS[base_note].split()
         for cmd in commands:
-            dx += {"x+": 1, "x-": -1, "y+": 0, "y-": 0}.get(cmd, 0)
-            dy += {"y+": 1, "y-": -1, "x+": 0, "x-": 0}.get(cmd, 0)
+            dx += {"x+": 1, "x-": -1}.get(cmd, 0)
+            dy += {"y+": 1, "y-": -1}.get(cmd, 0)
             dz += {"z+": 1, "z-": -1}.get(cmd, 0)
 
-    # Accidental movements
     if accidental in MOVEMENTS:
         commands = MOVEMENTS[accidental].split()
         for cmd in commands:
             dx += {"x?": random.choice([-1, 1])}.get(cmd, 0)
             dy += {"y?": random.choice([-1, 1])}.get(cmd, 0)
 
-    # Scale movements
-    rms_scale = max(MOVE_SPEED_BASE, min(rms * MOVE_SPEED_MAX, MOVE_SPEED_MAX))
-    dx *= rms_scale * 0.1  # Convert to cm
-    dy *= rms_scale * 0.1
-    dz *= LAYER_HEIGHT
+    # Adjust movement scale for RMS
+    rms_scale = max(MOVE_SPEED_BASE, min(rms * MOVE_SPEED_MAX, MOVE_SPEED_MAX)) * 0.01
+    dx *= rms_scale
+    dy *= rms_scale
+    dz *= rms_scale
 
-    # Calculate new position
-    new_x, new_y, new_z = x + dx, y + dy, z + dz
+    # New position calculations
+    new_x = x + dx
+    new_y = y + dy
+    new_z = z + dz
 
-    # Enforce boundaries
+    # Bound checks
     distance_from_center = np.sqrt(
         (new_x - PLATE_CENTER[0]) ** 2 + (new_y - PLATE_CENTER[1]) ** 2
     )
     if distance_from_center > MAX_RADIUS:
-        logging.warning(
-            f"Movement out of bounds. Adjusting to max radius. Attempted: X={new_x}, Y={new_y}, Z={new_z}"
-        )
         angle = np.arctan2(new_y - PLATE_CENTER[1], new_x - PLATE_CENTER[0])
         new_x = PLATE_CENTER[0] + MAX_RADIUS * np.cos(angle)
         new_y = PLATE_CENTER[1] + MAX_RADIUS * np.sin(angle)
 
-    if new_z < MIN_Z:
-        new_z = MIN_Z
-    elif new_z > MAX_Z:
-        new_z = MAX_Z
+    new_z = min(max(new_z, MIN_Z), MAX_Z)
 
     # Send G-code command
-    command = f"G1 X{new_x * 10:.2f} Y{new_y * 10:.2f} Z{new_z:.2f} F{rms_scale}"
+    command = (
+        f"G1 X{new_x * 10:.2f} Y{new_y * 10:.2f} Z{new_z * 10:.2f} F{rms_scale * 1000}"
+    )
     if live_mode:
         output.write(f"{command}\n".encode())
+        wait_for_printer_ready(output)
     else:
         output.write(f"{command}\n")
 
     logging.info(
-        f"Note: {note}, RMS: {rms:.2f}, Movement: dx={dx:.2f} cm, dy={dy:.2f} cm, dz={dz:.2f} cm. "
+        f"Movement: dx={dx:.2f} cm, dy={dy:.2f} cm, dz={dz:.2f} cm. \n"
+        f"G1 X{new_x * 10:.2f} Y{new_y * 10:.2f} Z{new_z * 10:.2f} F{rms_scale * 1000} \n"
         f"New Position: X={new_x:.2f}, Y={new_y:.2f}, Z={new_z:.2f}"
     )
-    if live_mode:
-        wait_for_printer_ready(output)
 
     return new_x, new_y, new_z
 
