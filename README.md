@@ -10,7 +10,7 @@ In the simplest version, the python script listens to the microphone for sound a
 
 3.**This is very lightly tested.**: There is at least one known (logic) bug. The printer gets stuck high, and you need to play it *a lot* of F notes to get it to come down. 
 
-Maybe one day I (or you) will clean this up and/or improve it, but until then, enjoy it **_as is_**. 
+Maybe one day I (or you) will clean this up and/or improve it, but until then, enjoy it **_as is_**  ```¯\_(ツ)_/¯```.
 
 
 ## Requirements
@@ -43,7 +43,7 @@ pip install pyserial numpy sounddevice scipy pydub
 ## Configuration
 
 * Serial Port: Update the ```SERIAL_PORT``` variable in the script to match your printer's serial port.
-* Parameters: Adjust parameters like  ```PLATE_CENTER```, ```LAYER_HEIGHT```, etc., to match your setup. **Attention!** Don't break your 3d printer by sending wrong parameters and have its arm break the plate. 
+* Parameters: Adjust parameters like  the *important* ```MIN_Z```, and others like ```PLATE_CENTER```, ```LAYER_HEIGHT```, etc., to match your setup. **Attention!** Don't break your 3d printer by sending wrong parameters and have its arm break the plate, check and adjust ```MIN_Z```.
 
 
 ## Example of use
@@ -75,7 +75,32 @@ This will look a bit like this, and there is a lot of _debug_ output, so that yo
 This debug will also be *appended* to a file (printer_debug.log). 
 
 
-## List of files
-* ```choreography-mic.py``` is the sole survivor of the attempts as the final and most complete script. 
-* in ```gcode-files``` there are some example gcode files produced. Their name is indicative of the intention :)
-* ```notes.txt``` contains some documentation and explanations concerning mapping of frequencies to notes. You need to edit the actual python script to change the mapping, but I used this to not lose track and thought it might be helpful to share it ```¯\_(ツ)_/¯```.
+## How it works
+
+The sound, whatever its chosen source, is translated into frequencies and loudness (RMS). 
+
+### Tone -> Direction ###
+The frequencies, are mapped to notes and then the different notes are mapped to movements as follows: 
+
+- A moves x right
+- B moves x left
+- C moves y right
+- D moves y left
+- E moves z up
+- F moves z down
+- G changes x,y directions randomly
+
+In addition to notes, the accidental also influences movement as follows: 
+- Sharp changes x direction randomly 
+- Flat changes y direction randomly 
+
+Feel free to play around with this by editing the ```MOVEMENTS``` mapping in the main script. 
+
+### Loudness -> speed ###
+Loudness (RMS) is encoded as follows: 
+
+- silent (0) stops movement
+- loudness translates into speed, louder is faster
+- softest is below 0.025, loud is above 0.1. VERY LOUD is above 1. Nuance the in-between
+
+

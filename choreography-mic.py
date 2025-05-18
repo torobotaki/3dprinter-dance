@@ -33,6 +33,8 @@ CHUNK_SIZE = 2048  # Audio chunk size
 SAMPLE_RATE = 44100  # Audio sample rate
 MAX_RADIUS = 9.0  # Maximum allowed movement radius (18 cm diameter)
 PRINTER_POLL_FREQ = 0.5  # frequency of sending movements to the printer. 0.5 works alright in my experiments.
+MIN_Z = 10  # Minimum Z height (e.g., at the plate level)
+MAX_Z = 220  # Maximum Z height (adjust based on your setup)
 
 
 # Frequency mapping to notes
@@ -126,13 +128,13 @@ NOTES = [
 
 # Movement mapping Notes to movements
 MOVEMENTS = {
-    "A": "x+",
-    "B": "x-",
-    "C": "y+",
-    "D": "y-",
-    "E": "z+",
-    "F": "z-",
-    "G": "xy?",
+    "A": "x+",  # A moves x right
+    "B": "x-",  # B moves x left
+    "C": "y+",  # C moves y right
+    "D": "y-",  # D moves y left
+    "E": "z+",  # E moves z up
+    "F": "z-",  # F moves z down
+    "G": "xy?",  # G changes x,y directions randomly
     "#": "x?",  # Sharp changes X direction randomly
     "b": "y?",  # Flat changes Y direction randomly
 }
@@ -153,15 +155,6 @@ def wait_for_printer_ready(ser):
 
 def calculate_rms(samples):
     return float(np.sqrt(np.mean(samples**2)))
-
-
-def normalize_note_with_accidental(note):
-    """Extract the base note and accidental (sharp/flat) from the note."""
-    if note:
-        base_note = note[0]
-        accidental = note[1] if len(note) > 1 and note[1] in ["#", "b"] else "natural"
-        return base_note, accidental
-    return None, None
 
 
 def audio_from_file(file_path):
@@ -324,9 +317,13 @@ def normalize_note(note):
     return None, None
 
 
-# Add Z-axis boundaries
-MIN_Z = 10  # Minimum Z height (e.g., at the plate level)
-MAX_Z = 220  # Maximum Z height (adjust based on your setup)
+def normalize_note_with_accidental(note):
+    """Extract the base note and accidental (sharp/flat) from the note."""
+    if note:
+        base_note = note[0]
+        accidental = note[1] if len(note) > 1 and note[1] in ["#", "b"] else "natural"
+        return base_note, accidental
+    return None, None
 
 
 def move_printer(output, x, y, z, note, rms, live_mode):
