@@ -52,12 +52,12 @@ pip install pyserial numpy sounddevice scipy pydub
 * On Linux (Debian/Ubuntu): ```sudo apt-get install ffmpeg ```
 
 ## Configuration
-
+Edit the code and adjust the following to match your 3d printer and computer setup: 
 * Serial Port: Update the ```SERIAL_PORT``` variable in the script to match your printer's serial port.
 * Parameters: Adjust parameters like  the *important* ```MIN_Z```, and others like ```PLATE_CENTER```, ```LAYER_HEIGHT```, etc., to match your setup. **Attention!** Don't break your 3d printer by sending wrong parameters and have its arm break the plate, check and adjust ```MIN_Z```.
+  
 
-
-## Example of use
+## Example
 Launch it using ```python3```. You can then choose 
 * if you want it to connect ```live``` (via serial/USB) to a printer able to receive GCODE commands, or if you want to write the gcode commands to a ```file``` that you can later give to a printer (by using a card or othewrise), or maybe a visualization/simulation tool 
 * if you want to listen to the ```mic```, feed it an _audio_ ```file``` (wav or mp3), or even the system output (_Attention: this might not work the way you think it will_).
