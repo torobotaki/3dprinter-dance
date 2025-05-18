@@ -21,7 +21,7 @@ In the simplest version, the python script listens to the microphone for sound a
 
 3.**This is very lightly tested.**: There is at least one known (logic) bug. The printer gets stuck high, and you need to play it *a lot* of F notes to get it to come down. 
 
-Maybe one day I (or you) will clean this up and/or improve it, but until then, enjoy it **_as is_**  ```¯\_(ツ)_/¯```.
+Maybe one day I (or **you**) will clean this up and/or improve it, but until then, enjoy it **_as is_**  ```¯\_(ツ)_/¯```.
 
 
 ## Requirements
