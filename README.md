@@ -1,21 +1,55 @@
 # 3dprinter-dance
 Experiments with making a 3d printer (_creality ender_) "dance" via gcode and python. 
-
+This project allows you to create a choreography for a 3D printer based on audio input. The printer moves in response to detected musical notes and audio frequencies.
 In the simplest version, the python script listens to the microphone for sound and tries and translate sound into gcode movements. 
 
 ## Disclaimer
-**MESS**: The code here is messy, it was produced very fast during a [workshop](https://www.instagram.com/p/DFBHI3SumZL/), and quite honestly I've been procrastinating cleaning it up :D
+1.**Sending arbitrary code to your 3d printer can be dangerous**. Be sure to match your printer's paramaters to avoid breaking things. The main thing that can break, is pushing to hard on the plate. The rest should be safe-r. Try something like [Cura](https://ultimaker.com/software/ultimaker-cura/) to simulate and visualize before sending it to your printer. 
 
-**BUGS**: There is at least one known (logic) bug. The printer gets stuck high, and you need to play it *a lot* of F notes to get it to come down. 
+2.**This is messy.** The code here was produced very fast during a [workshop](https://www.instagram.com/p/DFBHI3SumZL/), and quite honestly I've been procrastinating cleaning it up :D
 
-Maybe one day I will clean this up, but until then, enjoy.
+3.**This is very lightly tested.**: There is at least one known (logic) bug. The printer gets stuck high, and you need to play it *a lot* of F notes to get it to come down. 
 
+Maybe one day I (or you) will clean this up and/or improve it, but until then, enjoy it **_as is_**. 
+
+
+## Requirements
+* Python 3.x
+* Libraries: ```pyserial```, ```numpy```, ```sounddevice```, ```scipy```, ```pydub```
+* FFmpeg (for handling MP3 files)
+
+
+## Installation
+
+1. Clone the repository:
+
+```
+git clone https://github.com/torobotaki/3dprinter-dance.git
+cd 3dprinter-dance
+```
+
+2. Install the required libraries:
+
+```
+pip install pyserial numpy sounddevice scipy pydub
+```
+
+3. Install FFmpeg:
+
+* On macOS: ```brew install ffmpeg ```
+* On Windows: ```Download from FFmpeg website ```
+* On Linux (Debian/Ubuntu): ```sudo apt-get install ffmpeg ```
+
+## Configuration
+
+* Serial Port: Update the ```SERIAL_PORT``` variable in the script to match your printer's serial port.
+* Parameters: Adjust parameters like  ```PLATE_CENTER```, ```LAYER_HEIGHT```, etc., to match your setup. **Attention!** Don't break your 3d printer by sending wrong parameters and have its arm break the plate. 
 
 
 ## Example of use
 Launch it using ```python3```. You can then choose 
 * if you want it to connect ```live``` (via serial/USB) to a printer able to receive GCODE commands, or if you want to write the gcode commands to a ```file``` that you can later give to a printer (by using a card or othewrise), or maybe a visualization/simulation tool 
-* if you want to listen to the ```mic```, feed it an _audio_ ```file``` (wav), or even the system output (_Attention: this might not work the way you think it will_).
+* if you want to listen to the ```mic```, feed it an _audio_ ```file``` (wav or mp3), or even the system output (_Attention: this might not work the way you think it will_).
 * the input/output file names, accordingly.
 
 This will look a bit like this, and there is a lot of _debug_ output, so that you see what is happening. 
