@@ -3,6 +3,17 @@ Experiments with making a 3d printer (_creality ender_) "dance" via gcode and py
 This project allows you to create a choreography for a 3D printer based on audio input. The printer moves in response to detected musical notes and audio frequencies.
 In the simplest version, the python script listens to the microphone for sound and tries and translate sound into gcode movements. 
 
+
+## Table of Contents
+- [Disclaimer](#disclaimer)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Example of Use](#example-of-use)
+- [How it Works](#how-it-works)
+
+
+    
 ## Disclaimer
 1.**Sending arbitrary code to your 3d printer can be dangerous**. Be sure to match your printer's paramaters to avoid breaking things. The main thing that can break, is pushing to hard on the plate. The rest should be safe-r. Try something like [Cura](https://ultimaker.com/software/ultimaker-cura/) to simulate and visualize before sending it to your printer. 
 
@@ -79,7 +90,7 @@ This debug will also be *appended* to a file (printer_debug.log).
 
 The sound, whatever its chosen source, is translated into frequencies and loudness (RMS). 
 
-### Tone -> Direction ###
+#### Tone -> Direction ####
 The frequencies, are mapped to notes and then the different notes are mapped to movements as follows: 
 
 - A moves x right
@@ -96,11 +107,10 @@ In addition to notes, the accidental also influences movement as follows:
 
 Feel free to play around with this by editing the ```MOVEMENTS``` mapping in the main script. 
 
-### Loudness -> speed ###
+#### Loudness -> speed ####
 Loudness (RMS) is encoded as follows: 
 
 - silent (0) stops movement
 - loudness translates into speed, louder is faster
-- softest is below 0.025, loud is above 0.1. VERY LOUD is above 1. Nuance the in-between
 
 
